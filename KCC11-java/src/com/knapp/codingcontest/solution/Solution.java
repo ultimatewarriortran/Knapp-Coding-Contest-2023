@@ -35,7 +35,7 @@ public class Solution {
   }
 
   public Institute getParticipantInstitution() {
-    return Institute.HTL_Rennweg_Wien ; // TODO: return the Id of your institute - please refer to the hand-out
+    return Institute.HTL_Rennweg_Wien; // TODO: return the Id of your institute - please refer to the hand-out
   }
 
   // ----------------------------------------------------------------------------
@@ -48,24 +48,33 @@ public class Solution {
   public Solution(final InputData input, final Operations operations) throws NoStockInWarehouseException, OrderLineAlreadyPackedException {
     this.input = input;
     this.operations = operations;
-    for (int i = 0; i < 20; i++) {
-      Warehouse warehouse = input.getWarehouses().get(i);
-      Position warehousePos = warehouse.getPosition();
-      for (int k = 0; k < 10000; k++) {
+
+    for (int k = 0; k < 10000; k++) {
+      double min = 490;
+      for (int i = 0; i < 20; i++) {
+        Warehouse warehouse = input.getWarehouses().get(i);
+        Position warehousePos = warehouse.getPosition();
         OrderLine orderLine = input.getOrderLines().get(k);
         Customer customer = input.getOrderLines().get(k).getCustomer();
         Position customerPos = customer.getPosition();
         double distance = customerPos.calculateDistance(warehousePos);
         Product product = input.getOrderLines().get(k).getProduct();
-        if (warehouse.hasStock(product) && distance<100) {
-          try {
-            operations.ship(orderLine, warehouse);
-          } catch (OrderLineAlreadyPackedException ignored) {
+        for (int j = 0; j < 20; j++) {
+          if (distance < min) {
+            if (warehouse.hasStock(product))
+              try {
+                operations.ship(orderLine, warehouse);
+              } catch (OrderLineAlreadyPackedException | NoStockInWarehouseException ignored) {
+              }
+            /**min = distance;
+             System.out.println(min +" + "+ warehouse.getCode());**/
           }
         }
       }
     }
   }
+
+
 
 
 
