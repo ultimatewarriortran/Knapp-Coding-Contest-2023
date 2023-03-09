@@ -48,31 +48,44 @@ public class Solution {
   public Solution(final InputData input, final Operations operations) throws NoStockInWarehouseException, OrderLineAlreadyPackedException {
     this.input = input;
     this.operations = operations;
-
-    for (int k = 0; k < 10000; k++) {
-      double min = 490;
-      for (int i = 0; i < 20; i++) {
-        Warehouse warehouse = input.getWarehouses().get(i);
+    Map<String, Double> distanceMap = new HashMap<>();
+    for (int i = 0; i < input.getWarehouses().size(); i++) {
+      Warehouse warehouse = input.getWarehouses().get(i);
+      for (int j = 0; j < input.getOrderLines().size(); j++) {
+        Customer customer = input.getOrderLines().get(j).getCustomer();
         Position warehousePos = warehouse.getPosition();
-        OrderLine orderLine = input.getOrderLines().get(k);
-        Customer customer = input.getOrderLines().get(k).getCustomer();
         Position customerPos = customer.getPosition();
-        double distance = customerPos.calculateDistance(warehousePos);
-        Product product = input.getOrderLines().get(k).getProduct();
-        for (int j = 0; j < 20; j++) {
-          if (distance < min) {
-            if (warehouse.hasStock(product))
-              try {
-                operations.ship(orderLine, warehouse);
-              } catch (OrderLineAlreadyPackedException | NoStockInWarehouseException ignored) {
-              }
-            /**min = distance;
-             System.out.println(min +" + "+ warehouse.getCode());**/
+        double distance = warehousePos.calculateDistance(customerPos);
+        distanceMap.put(i + "_" + j, distance);
+      }
+    }
+    for (int k = 0; k < input.getOrderLines().size(); k++) {
+      OrderLine orderLine = input.getOrderLines().get(k);
+      Customer customer = orderLine.getCustomer();
+      Product product = orderLine.getProduct();
+      double minDistance = Double.MAX_VALUE;
+      Warehouse closestWarehouse = null;
+      for (int i = 0; i < input.getWarehouses().size(); i++) {
+        Warehouse warehouse = input.getWarehouses().get(i);
+        if (warehouse.hasStock(product)) {
+          double distance = distanceMap.get(i + "_" + k);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestWarehouse = warehouse;
           }
+        }
+      }
+      if (closestWarehouse != null) {
+        try {
+          operations.ship(orderLine, closestWarehouse);
+        } catch (OrderLineAlreadyPackedException | NoStockInWarehouseException ignored) {
         }
       }
     }
   }
+
+
+
 
 
 
